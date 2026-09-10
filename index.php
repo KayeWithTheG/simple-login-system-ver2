@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Asia/Manila');
 session_start();
 require_once 'db.php';
 
@@ -11,28 +12,25 @@ $is_permanent = false;
 $remaining = 0;
 $locked_student_id = "";
 
+$currentTime = time();
+
 if (isset($_SESSION['locked_student_id'])) {
     $check_id = $_SESSION['locked_student_id'];
     $lockData = $lockoutCollection->findOne(['student_id' => $check_id]);
     
     if ($lockData) {
-        if ($lockData['is_permanent']) {
+        if (!empty($lockData['is_permanent'])) {
             $is_locked = true;
             $is_permanent = true;
             $locked_student_id = $check_id;
             $error = "Account $check_id is permanently locked due to excessive failed attempts. Please contact the Admin.";
-        } elseif (time() < $lockData['lockout_time']) {
-            $remaining = $lockData['lockout_time'] - time();
+        } elseif ($currentTime < $lockData['lockout_time']) {
+            $remaining = $lockData['lockout_time'] - $currentTime;
             $is_locked = true;
             $locked_student_id = $check_id;
             $error = "Account $check_id temporarily locked. Try again in $remaining seconds.";
         } else {
-            if ($lockData['lockout_time'] > 0 && time() >= $lockData['lockout_time']) {
-                $lockoutCollection->updateOne(
-                    ['student_id' => $check_id],
-                    ['$set' => ['failed_attempts' => 0, 'lockout_time' => 0]]
-                );
-            }
+            // Timer expired, but keep record for level tracking or reset safely
             unset($_SESSION['locked_student_id']);
         }
     } else {
@@ -66,24 +64,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !$is_locked) {
         $lockData = $lockoutCollection->findOne(['student_id' => $student_id]);
     }
 
-    if ($lockData['is_permanent']) {
+    // Check if currently locked based on DB
+    if (!empty($lockData['is_permanent'])) {
         $is_locked = true;
         $is_permanent = true;
         $locked_student_id = $student_id;
         $_SESSION['locked_student_id'] = $student_id;
         $error = "Account is permanently locked. Please contact the Administrator.";
-    } elseif (time() < $lockData['lockout_time']) {
-        $remaining = $lockData['lockout_time'] - time();
+    } elseif ($currentTime < $lockData['lockout_time']) {
+        $remaining = $lockData['lockout_time'] - $currentTime;
         $is_locked = true;
         $locked_student_id = $student_id;
         $_SESSION['locked_student_id'] = $student_id;
         $error = "Account temporarily locked. Try again in $remaining seconds.";
     } else {
-        if ($lockData['lockout_time'] > 0 && time() >= $lockData['lockout_time']) {
+        // If previous lockout time has passed, reset time/attempts for this round but keep level tracking if needed, or handle expiration
+        if ($lockData['lockout_time'] > 0 && $currentTime >= $lockData['lockout_time']) {
             $lockoutCollection->updateOne(
                 ['student_id' => $student_id],
                 ['$set' => ['failed_attempts' => 0, 'lockout_time' => 0]]
             );
+            $lockData = $lockoutCollection->findOne(['student_id' => $student_id]);
         }
 
         if (strlen($student_id) !== 9) {
@@ -98,6 +99,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !$is_locked) {
             }
 
             if ($valid) {
+                // Successful login: wipe out lockout record entirely so user starts fresh next time
                 $lockoutCollection->deleteOne(['student_id' => $student_id]);
                 unset($_SESSION['locked_student_id']);
 
@@ -105,26 +107,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !$is_locked) {
                 $_SESSION["name"] = $student_name;
                 $_SESSION["department"] = $student_dept;
 
-                $auditCollection->insertOne([
-                    'timestamp' => $timestamp,
-                    'action' => 'SUCCESS',
-                    'ip_address' => $ip_address,
-                    'student_id' => $student_id,
-                    'details' => "SUCCESS (IP: $ip_address): $student_id logged in."
-                ]);
+                try {
+                    $auditCollection->insertOne([
+                        'timestamp' => $timestamp,
+                        'action' => 'SUCCESS',
+                        'ip_address' => $ip_address,
+                        'student_id' => $student_id,
+                        'details' => "SUCCESS (IP: $ip_address): $student_id logged in."
+                    ]);
+                } catch (Exception $e) {}
 
                 header("Location: dashboard.php");
                 exit;
             } else {
-                $current_level = (int)$lockData['lockout_level'];
-                $current_attempts = (int)$lockData['failed_attempts'];
+                $current_level = (int)($lockData['lockout_level'] ?? 0);
+                $current_attempts = (int)($lockData['failed_attempts'] ?? 0);
 
                 if ($current_level === 0) {
                     $current_attempts++;
                     if ($current_attempts >= 3) {
                         $lock_duration = 30; 
                         $new_level = 1;
-                        $lockout_time = time() + $lock_duration;
+                        $lockout_time = $currentTime + $lock_duration;
                         $remaining = $lock_duration;
                         $is_locked = true;
                         $error = "Too many failed attempts. Locked for 30 seconds.";
@@ -160,7 +164,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !$is_locked) {
                     }
 
                     if (!$is_permanent) {
-                        $lockout_time = time() + $lock_duration;
+                        $lockout_time = $currentTime + $lock_duration;
                         $remaining = $lock_duration;
                         $is_locked = true;
 
@@ -174,13 +178,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !$is_locked) {
                 $locked_student_id = $student_id;
                 $_SESSION['locked_student_id'] = $student_id;
 
-                $auditCollection->insertOne([
-                    'timestamp' => $timestamp,
-                    'action' => 'FAILED',
-                    'ip_address' => $ip_address,
-                    'student_id' => $student_id,
-                    'details' => "FAILED (IP: $ip_address): Attempt for ID $student_id."
-                ]);
+                try {
+                    $auditCollection->insertOne([
+                        'timestamp' => $timestamp,
+                        'action' => 'FAILED',
+                        'ip_address' => $ip_address,
+                        'student_id' => $student_id,
+                        'details' => "FAILED (IP: $ip_address): Attempt for ID $student_id."
+                    ]);
+                } catch (Exception $e) {}
             }
         }
     }
@@ -236,7 +242,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !$is_locked) {
 
   <?php if ($is_locked && !$is_permanent): ?>
   <script>
-    let timeLeft = <?php echo $remaining; ?>;
+    let timeLeft = <?php echo (int)$remaining; ?>;
     const timerSpan = document.getElementById('countdown-timer');
 
     const countdownInterval = setInterval(() => {
