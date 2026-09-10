@@ -1,0 +1,227 @@
+
+
+* {
+  box-sizing: border-box;
+}
+
+
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(rgba(0, 33, 71, 0.5), rgba(0, 33, 71, 0.5)), url('jru-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+.box {
+  background: #ffffff;
+  padding: 30px 40px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  width: 360px;
+  text-align: center;
+  border-top: 5px solid #002147;
+}
+
+
+.dashboard-box {
+  width: 420px;
+  margin-top: 80px; 
+}
+
+
+.logo {
+  width: 80px;
+  height: auto;
+  margin-bottom: 10px;
+}
+
+
+h2 {
+  margin-top: 0;
+  color: #002147;
+}
+
+
+.slogan {
+  color: #d4af37;
+  font-style: italic;
+  margin-top: -10px;
+  margin-bottom: 20px;
+}
+
+
+.account-info {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  text-align: left;
+  border-left: 4px solid #d4af37;
+  margin-bottom: 20px;
+}
+
+
+.account-info p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+
+.status-active {
+  color: #2f855a;
+  font-weight: bold;
+}
+
+
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+
+button {
+  width: 100%;
+  padding: 12px;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+
+.btn-login {
+  background: #002147;
+}
+.btn-login:hover {
+  background: #00122b;
+}
+
+
+.btn-register {
+  background: #d4af37;
+  color: #002147;
+}
+.btn-register:hover {
+  background: #b5952f;
+}
+
+
+.btn-logout {
+  display: inline-block;
+  background: #c53030;
+  padding: 10px 20px;
+  border-radius: 4px;
+  text-decoration: none;
+  color: #fff;
+}
+
+
+.error {
+  color: #c53030;
+  background: #fed7d7;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+
+a.link {
+  display: block;
+  margin-top: 15px;
+  color: #002147;
+  text-decoration: none;
+  font-size: 14px;
+}
+a.link:hover {
+  text-decoration: underline;
+}
+
+
+.top-nav {
+  background: #002147;
+  width: 100%;
+  padding: 15px 30px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+
+.top-nav .nav-brand {
+  font-weight: bold;
+  font-size: 16px;
+  color: #d4af37;
+}
+
+
+.top-nav .nav-links a {
+  color: white;
+  text-decoration: none;
+  margin-left: 25px;
+  font-size: 14px;
+}
+
+
+.top-nav .nav-links a:hover {
+  color: #d4af37;
+}
+
+
+.security-banner {
+  background: #fff3cd;
+  color: #856404;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  margin-bottom: 15px;
+  border: 1px solid #ffeeba;
+}
+
+
+.audit-trail {
+  margin-top: 20px;
+  text-align: left;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+}
+
+
+.audit-trail h3 {
+  font-size: 14px;
+  color: #002147;
+  margin-bottom: 10px;
+  margin-top: 0;
+}
+
+
+.audit-trail ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  font-size: 11px;
+  color: #555;
+}
+
+
+.audit-trail li {
+  background: #f8f9fa;
+  padding: 8px;
+  margin-bottom: 5px;
+  border-left: 4px solid #002147;
+  border-radius: 4px;
+}
