@@ -4,9 +4,13 @@ FROM php:8.1-apache
 RUN apt-get update && apt-get install -y libssl-dev git unzip \
     && pecl install mongodb \
     && docker-php-ext-enable mongodb \
-    && docker-php-ext-install mysqli pdo pdo_mysql
+    && docker-php-ext-install mysqli pdo pdo_mysql \
+    && a2enmod rewrite
 
-# Copy all project files including the existing vendor folder
+# Enable output buffering in PHP configuration for safe header redirections
+RUN echo "output_buffering = On" > /usr/local/etc/php/conf.d/feedback.ini
+
+# Copy all project files including your vendor folder
 COPY . /var/www/html/
 
 # Set working directory
