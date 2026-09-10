@@ -7,8 +7,9 @@ RUN apt-get update && apt-get install -y libssl-dev git unzip \
     && docker-php-ext-install mysqli pdo pdo_mysql \
     && a2enmod rewrite
 
-# Enable output buffering in PHP configuration for safe header redirections
-RUN echo "output_buffering = On" > /usr/local/etc/php/conf.d/feedback.ini
+# Optimize PHP session and execution handling for cloud deployment
+RUN echo "session.gc_maxlifetime = 1440" > /usr/local/etc/php/conf.d/session.ini \
+    && echo "output_buffering = On" >> /usr/local/etc/php/conf.d/session.ini
 
 # Copy all project files including your vendor folder
 COPY . /var/www/html/
