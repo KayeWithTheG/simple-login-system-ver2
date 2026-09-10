@@ -9,9 +9,11 @@ RUN apt-get update && apt-get install -y libssl-dev git unzip \
 # Install Composer globally
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy project files
+# Copy project files first so composer.json is available
 COPY . /var/www/html/
 
-# Run composer install to generate the vendor folder
+# Set working directory
 WORKDIR /var/www/html
-RUN composer install --no-dev --optimize-autoloader
+
+# Run composer install with extra permissions
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
