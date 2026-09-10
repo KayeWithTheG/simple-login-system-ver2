@@ -16,8 +16,9 @@ COPY . /var/www/html/
 # Set working directory
 WORKDIR /var/www/html
 
-# Automatically install dependencies if vendor folder is missing from Git
-RUN if [ ! -d "vendor" ]; then COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader --ignore-platform-reqs; fi
+# Force clear old vendor/lock and install a compatible MongoDB library version
+RUN rm -rf vendor composer.lock \
+    && COMPOSER_ALLOW_SUPERUSER=1 composer require mongodb/mongodb:^1.16 --no-interaction --ignore-platform-reqs
 
 # Optimize PHP session settings
 RUN echo "session.gc_maxlifetime = 1440" > /usr/local/etc/php/conf.d/session.ini \
