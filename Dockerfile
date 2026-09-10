@@ -15,5 +15,6 @@ COPY . /var/www/html/
 # Set working directory
 WORKDIR /var/www/html
 
-# Run composer install safely
-RUN if [ -f composer.json ]; then COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader --ignore-platform-reqs; fi
+# Clean vendor if exists and install fresh packages matching PHP 8.1
+RUN rm -rf vendor composer.lock \
+    && COMPOSER_ALLOW_SUPERUSER=1 composer require mongodb/mongodb:^1.16 --no-interaction --ignore-platform-reqs
