@@ -6,8 +6,14 @@ RUN apt-get update && apt-get install -y libssl-dev git unzip \
     && docker-php-ext-enable mongodb \
     && docker-php-ext-install mysqli pdo pdo_mysql
 
-# Copy all project files into the Apache web root
+# Install Composer globally
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Copy project files first
 COPY . /var/www/html/
 
 # Set working directory
 WORKDIR /var/www/html
+
+# Run composer install safely using a fallback if lock file causes issues
+RUN if [ -f composer.json ]; then COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader --ignore-platform-reqs; fi
