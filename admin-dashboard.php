@@ -115,7 +115,7 @@ if (isset($_SESSION['flash_success'])) {
     </div>
 
     <div style="text-align: center; margin-top: 25px;">
-      <a href="admin-logout.php" style="background: #c53030; color: white; padding: 10px 24px; border-radius: 4px; text-decoration: none; font-size: 14px; font-weight: bold; display: inline-block;">Logout</a>
+      <a href="logout.php" style="background: #c53030; color: white; padding: 10px 24px; border-radius: 4px; text-decoration: none; font-size: 14px; font-weight: bold; display: inline-block;">Logout</a>
     </div>
   </div>
 </body>
