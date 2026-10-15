@@ -264,8 +264,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !$is_locked) {
         <div style="font-size: 12px; padding: 10px; margin-bottom: 20px; background: #e8f4f8; border-left: 4px solid #002147; text-align: left; border-radius: 4px;">
             <strong>Login Policy:</strong>
             <ul style="margin: 4px 0 0 15px; padding: 0;">
-                <li>Student ID format must be <code>XX-XXXXXX</code> (Digits only)[cite: 8].</li>
-                <li>Maximum 3 failed attempts allows 30s lockout[cite: 8].</li>
+                <li>Student ID format must be <code>XX-XXXXXX</code> (Digits only).</li>
+                <li>Maximum 3 failed attempts allows 30s lockout.</li>
             </ul>
         </div>
 
