@@ -5,33 +5,36 @@ $success = "";
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $student_id = trim(htmlspecialchars($_POST["student_id"]));
-    $name = trim(htmlspecialchars($_POST["name"]));
-    $department = trim(htmlspecialchars($_POST["department"]));
-    $password = trim($_POST["password"]);
+    
+    $student_id = trim($_POST["student_id"] ?? "");
+    $name       = trim($_POST["name"] ?? "");
+    $department = trim($_POST["department"] ?? "");
+    $password   = trim($_POST["password"] ?? "");
 
-    // Validate Student ID length (must be exactly 9 characters)
-    if (strlen($student_id) !== 9) {
-        $error = "Student ID must be exactly 9 characters (e.g., 25-266124).";
-    } 
-    // Validate minimum password length
+    // 1. Student ID must be XX-XXXXXX (numbers only)
+    if (!preg_match('/^\d{2}-\d{6}$/', $student_id)) {
+        $error = "Student ID must follow format XX-XXXXXX with numbers only (e.g., 25-266124).";
+    }
+    // 2. Name: letters, spaces, period, hyphen lang (NO numbers)
+    else if (!preg_match("/^[A-Za-z\s.\-]+$/", $name)) {
+        $error = "Full Name must contain letters and spaces only (no numbers allowed).";
+    }
+    // 3. Minimum password length
     else if (strlen($password) < 8) {
         $error = "Password must be at least 8 characters long.";
     } else {
-        // Tignan kung existing na ang student ID sa MongoDB collection
         $existing = $collection->findOne(['student_id' => $student_id]);
 
         if ($existing) {
             $error = "Student ID is already registered.";
         } else {
-            // I-hash ang password bago i-save para secure
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
             $collection->insertOne([
                 'student_id' => $student_id,
-                'name' => $name,
+                'name'       => $name,
                 'department' => $department,
-                'pin' => $hashed_password,
+                'pin'        => $hashed_password,
                 'created_at' => date('Y-m-d H:i:s')
             ]);
 
@@ -70,6 +73,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         strengthText.style.color = "green";
       }
     }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      // Student ID: digits only + auto hyphen (XX-XXXXXX)
+      const idInput = document.getElementById("studentId");
+      idInput.addEventListener("input", function () {
+        let v = this.value.replace(/\D/g, "");
+        if (v.length > 2) v = v.substring(0, 2) + "-" + v.substring(2, 8);
+        this.value = v;
+      });
+
+      // Full Name: bawal ang numbers/symbols (typing, paste, autofill)
+      const nameInput = document.getElementById("fullName");
+      nameInput.addEventListener("input", function () {
+        this.value = this.value.replace(/[^A-Za-z\s.\-]/g, "");
+      });
+      nameInput.addEventListener("keypress", function (e) {
+        if (/[0-9]/.test(e.key)) e.preventDefault();
+      });
+    });
   </script>
 </head>
 <body>
@@ -78,23 +100,74 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       <img src="Logo.png" alt="JRU Logo" style="width: 75px; height: auto;">
       <div style="font-weight: bold; color: #002147; font-size: 16px; margin-top: 6px;">Student Access Pass</div>
     </div>
-    <h2 style="font-size: 22px; margin-bottom: 20px; color: #002147;">Student Registration</h2>
-    
-    <?php if ($error) { echo "<p class='error' style='margin-bottom: 20px;'>" . $error . "</p>"; } ?>
-    <?php if ($success) { echo "<p style='color: green; background: #e6fffa; padding: 10px; border-radius: 4px; margin-bottom: 20px; font-size: 14px;'>" . $success . "</p>"; } ?>
-    
+    <h2 style="font-size: 22px; margin-bottom: 15px; color: #002147; text-align: center;">Student Registration</h2>
+
+    <!-- REGISTRATION GUIDELINES BANNER -->
+    <div style="font-size: 12px; padding: 10px; margin-bottom: 20px; background: #e8f4f8; border-left: 4px solid #002147; text-align: left; border-radius: 4px;">
+        <strong>Registration Guidelines:</strong>
+        <ul style="margin: 4px 0 0 15px; padding: 0;">
+            <li><strong>Student ID:</strong> Format must be <code>XX-XXXXXX</code> (Numbers only).</li>
+            <li><strong>Full Name:</strong> Alphabetical characters and spaces only (No numbers allowed).</li>
+            <li><strong>Password:</strong> Minimum of 8 characters.</li>
+        </ul>
+    </div>
+
+    <?php if ($error) { echo "<p class='error' style='margin-bottom: 20px;'>" . htmlspecialchars($error) . "</p>"; } ?>
+    <?php if ($success) { echo "<p style='color: green; background: #e6fffa; padding: 10px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; text-align: center;'>" . htmlspecialchars($success) . "</p>"; } ?>
+
     <form method="POST" action="register.php">
-      <input type="text" name="student_id" placeholder="Student ID (e.g. 25-266124)" maxlength="9" oninput="if(this.value.length > 9) this.value = this.value.slice(0, 9);" required style="padding: 14px; font-size: 15px; margin-bottom: 15px;">
-      <input type="text" name="name" placeholder="Full Name" required style="padding: 14px; font-size: 15px; margin-bottom: 15px;">
-      <input type="text" name="department" placeholder="Department" required style="padding: 14px; font-size: 15px; margin-bottom: 15px;">
-      
-      <input type="password" id="password" name="password" placeholder="Password (Min. 8 characters)" required oninput="checkPasswordStrength()" style="padding: 14px; font-size: 15px; margin-bottom: 5px;">
+
+      <!-- Student ID -->
+      <input
+        type="text"
+        id="studentId"
+        name="student_id"
+        placeholder="Student ID (e.g. 25-266124)"
+        maxlength="9"
+        pattern="[0-9]{2}-[0-9]{6}"
+        title="Format: XX-XXXXXX (numbers only)"
+        required
+        style="padding: 14px; font-size: 15px; margin-bottom: 15px; width: 100%; box-sizing: border-box;"
+      >
+
+      <!-- Full Name: letters, spaces, period, hyphen only -->
+      <input
+        type="text"
+        id="fullName"
+        name="name"
+        placeholder="Full Name "
+        pattern="[A-Za-z\s.\-]+"
+        title="Letters, spaces, periods and hyphens only. No numbers."
+        required
+        style="padding: 14px; font-size: 15px; margin-bottom: 15px; width: 100%; box-sizing: border-box;"
+      >
+
+      <!-- Department -->
+      <input
+        type="text"
+        name="department"
+        placeholder="Department"
+        required
+        style="padding: 14px; font-size: 15px; margin-bottom: 15px; width: 100%; box-sizing: border-box;"
+      >
+
+      <!-- Password -->
+      <input
+        type="password"
+        id="password"
+        name="password"
+        placeholder="Password (Min. 8 characters)"
+        required
+        oninput="checkPasswordStrength()"
+        style="padding: 14px; font-size: 15px; margin-bottom: 5px; width: 100%; box-sizing: border-box;"
+      >
+
       <div id="strength-text" style="font-size: 12px; font-weight: bold; text-align: left; margin-bottom: 15px;"></div>
 
-      <button type="submit" class="btn-register" style="padding: 14px; font-size: 16px; font-weight: bold; background: #d4af37; color: #002147;">Register Account</button>
+      <button type="submit" class="btn-register" style="padding: 14px; font-size: 16px; font-weight: bold; background: #d4af37; color: #002147; width: 100%; border: none; border-radius: 4px; cursor: pointer;">Register Account</button>
     </form>
-    
-    <a class="link" href="index.php" style="margin-top: 20px; font-size: 14px;">Already have an access pass? Login</a>
+
+    <a class="link" href="index.php" style="margin-top: 20px; font-size: 14px; display: block; text-align: center; color: #002147; text-decoration: none;">Already have an access pass? Login</a>
   </div>
 </body>
 </html>
