@@ -20,12 +20,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $new_pin = trim($_POST["pin"]);
     $confirm_pin = trim($_POST["confirm_pin"]);
 
-    if (strlen($student_id) !== 9) {
-        $error = "Student ID must be exactly 9 characters (e.g., 25-266124).";
+    // 1. STRICT VALIDATION: Student ID must be XX-XXXXXX
+    if (!preg_match('/^\d{2}-\d{6}$/', $student_id)) {
+        $error = "Student ID must follow format XX-XXXXXX with numbers only (e.g., 25-266124).";
     } elseif (empty($new_pin) || empty($confirm_pin)) {
         $error = "Please fill in all password fields.";
     } elseif ($new_pin !== $confirm_pin) {
         $error = "Passwords do not match.";
+    } elseif (strlen($new_pin) < 8) {
+        $error = "New password must be at least 8 characters long.";
     } else {
         $student = $collection->findOne(['student_id' => $student_id]);
 
@@ -83,14 +86,33 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <h2 style="font-size: 22px; margin-bottom: 20px; color: #002147; text-align: center;">Reset Password</h2>
 
     <div id="error-container">
-      <?php if ($error) { echo "<p class='error' style='margin-bottom: 20px; color: #c53030;'>" . $error . "</p>"; } ?>
-      <?php if ($success) { echo "<p style='margin-bottom: 20px; color: #2f855a; font-weight: bold;'>" . $success . "</p>"; } ?>
+      <?php if ($error) { echo "<p class='error' style='margin-bottom: 20px; color: #c53030; text-align: center;'>" . $error . "</p>"; } ?>
+      <?php if ($success) { echo "<p style='margin-bottom: 20px; color: #2f855a; font-weight: bold; text-align: center; background: #e6fffa; padding: 10px; border-radius: 4px;'>" . $success . "</p>"; } ?>
     </div>
 
     <form method="POST" action="forgot-password.php">
-      <input type="text" name="student_id" placeholder="Student ID (e.g. 25-266124)" maxlength="9" required style="padding: 14px; font-size: 15px; margin-bottom: 15px; width: 100%; box-sizing: border-box;">
       
-      <input type="password" id="pin" name="pin" placeholder="Enter New Password" required style="padding: 14px; font-size: 15px; margin-bottom: 5px; width: 100%; box-sizing: border-box;" oninput="checkStrength(this.value)">
+      <!-- Student ID with Auto-Hyphenation (XX-XXXXXX) -->
+      <input 
+        type="text" 
+        name="student_id" 
+        placeholder="Student ID (e.g. 25-266124)" 
+        maxlength="9" 
+        pattern="[0-9]{2}-[0-9]{6}" 
+        oninput="let v = this.value.replace(/\D/g, ''); if (v.length > 2) v = v.substring(0,2) + '-' + v.substring(2,8); this.value = v;" 
+        required 
+        style="padding: 14px; font-size: 15px; margin-bottom: 15px; width: 100%; box-sizing: border-box;"
+      >
+      
+      <input 
+        type="password" 
+        id="pin" 
+        name="pin" 
+        placeholder="Enter New Password (Min. 8 characters)" 
+        required 
+        style="padding: 14px; font-size: 15px; margin-bottom: 5px; width: 100%; box-sizing: border-box;" 
+        oninput="checkStrength(this.value)"
+      >
       
       <!-- Strength Indicator with Dot -->
       <div class="strength-indicator" id="strengthContainer" style="display: none;">
@@ -98,7 +120,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <span class="dot" id="strengthDot"></span>
       </div>
 
-      <input type="password" name="confirm_pin" placeholder="Confirm New Password" required style="padding: 14px; font-size: 15px; margin-bottom: 20px; width: 100%; box-sizing: border-box;">
+      <input 
+        type="password" 
+        name="confirm_pin" 
+        placeholder="Confirm New Password" 
+        required 
+        style="padding: 14px; font-size: 15px; margin-bottom: 20px; width: 100%; box-sizing: border-box;"
+      >
       
       <button type="submit" class="btn-login" style="padding: 14px; font-size: 16px; font-weight: bold; background: #002147; width: 100%; color: white; border: none; border-radius: 4px; cursor: pointer;">Update Password</button>
     </form>
