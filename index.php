@@ -4,7 +4,7 @@ session_start();
 require_once 'db.php';
 
 $lockoutCollection = $database->selectCollection('lockouts');
-$auditCollection = $database->selectCollection('audit_logs');
+$auditCollection   = $database->selectCollection('audit_logs');
 
 $error = "";
 $is_locked = false;
@@ -14,13 +14,6 @@ $locked_student_id = "";
 
 $currentTime = time();
 $ip_address = $_SERVER['REMOTE_ADDR'];
-
-// Quick manual reset URL: index.php?clear=1
-if (isset($_GET['clear'])) {
-    unset($_SESSION['active_lockout_id']);
-    header("Location: index.php");
-    exit;
-}
 
 // 1. GET ACTIVE LOCKOUT STUDENT ID FROM SESSION OR URL
 if (isset($_SESSION['active_lockout_id'])) {
@@ -39,8 +32,8 @@ if (!empty($locked_student_id)) {
             $is_permanent = true;
             $_SESSION['active_lockout_id'] = $locked_student_id;
             $error = "Account $locked_student_id is permanently locked due to excessive failed attempts. Please contact the Admin.";
-        } elseif ($currentTime < $lockData['lockout_time']) {
-            $remaining = $lockData['lockout_time'] - $currentTime;
+        } elseif ($currentTime < (int)$lockData['lockout_time']) {
+            $remaining = (int)$lockData['lockout_time'] - $currentTime;
             $is_locked = true;
             $_SESSION['active_lockout_id'] = $locked_student_id;
             $error = "Too many failed attempts. Login locked for account $locked_student_id. Try again in $remaining seconds.";
@@ -95,8 +88,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !$is_locked) {
             $is_permanent = true;
             $_SESSION['active_lockout_id'] = $student_id;
             $error = "Account is permanently locked. Please contact the Administrator.";
-        } elseif ($currentTime < $lockData['lockout_time']) {
-            $remaining = $lockData['lockout_time'] - $currentTime;
+        } elseif ($currentTime < (int)$lockData['lockout_time']) {
+            $remaining = (int)$lockData['lockout_time'] - $currentTime;
             $is_locked = true;
             $_SESSION['active_lockout_id'] = $student_id;
             $error = "Too many failed attempts. Try again in $remaining seconds.";
@@ -115,6 +108,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !$is_locked) {
                 // SUCCESSFUL LOGIN -> FULL RESET
                 $lockoutCollection->deleteOne(['student_id' => $student_id]);
                 unset($_SESSION['active_lockout_id']);
+                session_regenerate_id(true);
 
                 $_SESSION["student_id"] = $student_id;
                 $_SESSION["name"] = $student_name;
@@ -134,7 +128,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !$is_locked) {
                 exit;
 
             } else {
-                // FAILED ATTEMPT LOGIC (FIXED GRADUATED TIERS)
+                // FAILED ATTEMPT LOGIC (GRADUATED TIERS)
                 $current_level = isset($lockData['lockout_level']) ? (int)$lockData['lockout_level'] : 0;
                 $current_attempts = isset($lockData['failed_attempts']) ? (int)$lockData['failed_attempts'] : 0;
 
@@ -237,7 +231,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !$is_locked) {
     exit;
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -282,24 +275,37 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !$is_locked) {
                 id="student_id"
                 name="student_id"
                 placeholder="Student ID (e.g. 25-266124)"
-                maxlength="9"
-                pattern="[0-9]{2}-[0-9]{6}"
-                oninput="let v = this.value.replace(/\D/g, ''); if (v.length > 2) v = v.substring(0,2) + '-' + v.substring(2,8); this.value = v;"
                 value="<?php echo htmlspecialchars($locked_student_id); ?>"
                 <?php echo $is_locked ? 'disabled' : ''; ?>
                 required
+                autocomplete="username"
                 style="padding: 14px; font-size: 15px; margin-bottom: 15px; width: 100%; box-sizing: border-box;"
             >
 
-            <input
-                type="password"
-                id="pin"
-                name="pin"
-                placeholder="Password"
-                <?php echo $is_locked ? 'disabled' : ''; ?>
-                required
-                style="padding: 14px; font-size: 15px; margin-bottom: 20px; width: 100%; box-sizing: border-box;"
-            >
+            <div class="pin-wrapper">
+                <input
+                    type="password"
+                    id="pin"
+                    name="pin"
+                    placeholder="Password"
+                    <?php echo $is_locked ? 'disabled' : ''; ?>
+                    required
+                    autocomplete="current-password"
+                >
+                <button
+                    type="button"
+                    id="toggle-pin"
+                    class="toggle-pass"
+                    title="Hold to show password"
+                    aria-label="Hold to show password"
+                    <?php echo $is_locked ? 'disabled' : ''; ?>
+                >
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </button>
+            </div>
 
             <button
                 type="submit"
@@ -322,10 +328,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !$is_locked) {
         </form>
 
         <div style="width: 340px; margin: 20px auto 0 auto; display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; font-size: 14px;">
-            
+
             <div style="text-align: right;">
                 <?php if ($is_locked): ?>
-                    <span style="color: #999; cursor: not-allowed; text-decoration: none;">Register</span>
+                    <span style="color: #999; cursor: not-allowed;">Register</span>
                 <?php else: ?>
                     <a href="register.php" style="color: #002147; text-decoration: none;">Register</a>
                 <?php endif; ?>
@@ -335,7 +341,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !$is_locked) {
 
             <div style="text-align: center;">
                 <?php if ($is_locked): ?>
-                    <span style="color: #999; cursor: not-allowed; text-decoration: none;">Admin</span>
+                    <span style="color: #999; cursor: not-allowed;">Admin</span>
                 <?php else: ?>
                     <a href="admin-login.php" style="color: #002147; text-decoration: none;">Admin</a>
                 <?php endif; ?>
@@ -369,6 +375,37 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !$is_locked) {
         }, 1000);
     </script>
     <?php endif; ?>
+
+    <script>
+        const pinInput = document.getElementById('pin');
+        const toggleBtn = document.getElementById('toggle-pin');
+
+        function showPin() {
+            pinInput.type = 'text';
+        }
+
+        function hidePin() {
+            pinInput.type = 'password';
+        }
+
+        if (toggleBtn) {
+            toggleBtn.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                showPin();
+            });
+            ['pointerup', 'pointerleave', 'pointercancel'].forEach((evt) => {
+                toggleBtn.addEventListener(evt, hidePin);
+            });
+            toggleBtn.addEventListener('keydown', (e) => {
+                if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    showPin();
+                }
+            });
+            toggleBtn.addEventListener('keyup', hidePin);
+            toggleBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+        }
+    </script>
 
 </body>
 </html>
