@@ -2,7 +2,6 @@
   box-sizing: border-box;
 }
 
-
 body {
   font-family: Arial, sans-serif;
   background: linear-gradient(rgba(0, 33, 71, 0.5), rgba(0, 33, 71, 0.5)), url('jru-bg.png');
@@ -15,6 +14,7 @@ body {
   height: 100vh;
   margin: 0;
 }
+
 .box {
   background: #ffffff;
   padding: 30px 40px;
@@ -25,12 +25,10 @@ body {
   border-top: 5px solid #002147;
 }
 
-
 .dashboard-box {
   width: 420px;
-  margin-top: 80px; 
+  margin-top: 80px;
 }
-
 
 .logo {
   width: 80px;
@@ -38,12 +36,10 @@ body {
   margin-bottom: 10px;
 }
 
-
 h2 {
   margin-top: 0;
   color: #002147;
 }
-
 
 .slogan {
   color: #d4af37;
@@ -51,7 +47,6 @@ h2 {
   margin-top: -10px;
   margin-bottom: 20px;
 }
-
 
 .account-info {
   background: #f8f9fa;
@@ -62,18 +57,15 @@ h2 {
   margin-bottom: 20px;
 }
 
-
 .account-info p {
   margin: 5px 0;
   font-size: 14px;
 }
 
-
 .status-active {
   color: #2f855a;
   font-weight: bold;
 }
-
 
 input {
   width: 100%;
@@ -82,7 +74,6 @@ input {
   border: 1px solid #ccc;
   border-radius: 4px;
 }
-
 
 button {
   width: 100%;
@@ -95,14 +86,12 @@ button {
   font-weight: bold;
 }
 
-
 .btn-login {
   background: #002147;
 }
 .btn-login:hover {
   background: #00122b;
 }
-
 
 .btn-register {
   background: #d4af37;
@@ -111,7 +100,6 @@ button {
 .btn-register:hover {
   background: #b5952f;
 }
-
 
 .btn-logout {
   display: inline-block;
@@ -122,7 +110,6 @@ button {
   color: #fff;
 }
 
-
 .error {
   color: #c53030;
   background: #fed7d7;
@@ -131,7 +118,6 @@ button {
   font-size: 14px;
   margin-bottom: 10px;
 }
-
 
 a.link {
   display: block;
@@ -143,7 +129,6 @@ a.link {
 a.link:hover {
   text-decoration: underline;
 }
-
 
 .top-nav {
   background: #002147;
@@ -159,13 +144,11 @@ a.link:hover {
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-
 .top-nav .nav-brand {
   font-weight: bold;
   font-size: 16px;
   color: #d4af37;
 }
-
 
 .top-nav .nav-links a {
   color: white;
@@ -174,11 +157,9 @@ a.link:hover {
   font-size: 14px;
 }
 
-
 .top-nav .nav-links a:hover {
   color: #d4af37;
 }
-
 
 .security-banner {
   background: #fff3cd;
@@ -190,7 +171,6 @@ a.link:hover {
   border: 1px solid #ffeeba;
 }
 
-
 .audit-trail {
   margin-top: 20px;
   text-align: left;
@@ -198,14 +178,12 @@ a.link:hover {
   padding-top: 15px;
 }
 
-
 .audit-trail h3 {
   font-size: 14px;
   color: #002147;
   margin-bottom: 10px;
   margin-top: 0;
 }
-
 
 .audit-trail ul {
   list-style-type: none;
@@ -215,11 +193,50 @@ a.link:hover {
   color: #555;
 }
 
-
 .audit-trail li {
   background: #f8f9fa;
   padding: 8px;
   margin-bottom: 5px;
   border-left: 4px solid #002147;
   border-radius: 4px;
+}
+
+/* HOLD-TO-SHOW PASSWORD */
+.pin-wrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* Inline style ay wala na sa password input, kaya dito na ang padding para hindi maabot ng text ang icon */
+.pin-wrapper input {
+  margin: 0;
+  padding: 14px 50px 14px 14px;
+  font-size: 15px;
+}
+
+.toggle-pass {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: auto;
+  padding: 6px;
+  background: none;
+  color: #002147;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.toggle-pass:disabled {
+  color: #999;
+  cursor: not-allowed;
+}
+
+.toggle-pass:hover:not(:disabled) {
+  color: #d4af37;
 }
