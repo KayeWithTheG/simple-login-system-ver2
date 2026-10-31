@@ -13,7 +13,7 @@ $admin_user = "admin";
 
 if (isset($_SESSION['locked_admin_user'])) {
     $lockData = $adminLockoutCollection->findOne(['username' => $admin_user]);
-    
+
     if ($lockData) {
         if (!empty($lockData['is_permanent'])) {
             $is_locked = true;
@@ -101,7 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !$is_locked) {
             if ($current_level === 0) {
                 $current_attempts++;
                 if ($current_attempts >= 3) {
-                    $lock_duration = 30; 
+                    $lock_duration = 30;
                     $new_level = 1;
                     $lockout_time = time() + $lock_duration;
                     $remaining = $lock_duration;
@@ -121,11 +121,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !$is_locked) {
                 }
             } else {
                 if ($current_level === 1) {
-                    $lock_duration = 60; 
+                    $lock_duration = 60;
                     $new_level = 2;
                     $error = "Repeated failed attempts. Locked for 1 minute.";
                 } elseif ($current_level >= 2 && $current_level <= 5) {
-                    $lock_duration = 120; 
+                    $lock_duration = 120;
                     $new_level = $current_level + 1;
                     $error = "Multiple failed attempts. Locked for 2 minutes.";
                 } else {
@@ -196,31 +196,47 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !$is_locked) {
     </div>
 
     <form method="POST" action="admin-login.php">
-      <input 
-        type="text" 
-        id="username" 
-        name="username" 
-        placeholder="Admin Username" 
-        <?php echo $is_locked ? 'disabled' : ''; ?> 
-        required 
+      <input
+        type="text"
+        id="username"
+        name="username"
+        placeholder="Admin Username"
+        <?php echo $is_locked ? 'disabled' : ''; ?>
+        required
+        autocomplete="username"
         style="padding: 14px; font-size: 15px; margin-bottom: 15px; width: 100%; box-sizing: border-box;"
       >
-      
-      <input 
-        type="password" 
-        id="password" 
-        name="password" 
-        placeholder="Admin Password" 
-        <?php echo $is_locked ? 'disabled' : ''; ?> 
-        required 
-        style="padding: 14px; font-size: 15px; margin-bottom: 20px; width: 100%; box-sizing: border-box;"
-      >
-      
-      <button 
-        type="submit" 
-        id="login-btn" 
-        class="btn-login" 
-        style="padding: 14px; font-size: 16px; font-weight: bold; background: #c53030; width: 100%; color: white; border: none; border-radius: 4px; cursor: pointer; <?php echo $is_locked ? 'opacity: 0.6;' : ''; ?>" 
+
+      <div class="pin-wrapper">
+        <input
+          type="password"
+          id="password"
+          name="password"
+          placeholder="Admin Password"
+          <?php echo $is_locked ? 'disabled' : ''; ?>
+          required
+          autocomplete="current-password"
+        >
+        <button
+          type="button"
+          id="toggle-pass"
+          class="toggle-pass"
+          title="Hold to show password"
+          aria-label="Hold to show password"
+          <?php echo $is_locked ? 'disabled' : ''; ?>
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+      </div>
+
+      <button
+        type="submit"
+        id="login-btn"
+        class="btn-login"
+        style="padding: 14px; font-size: 16px; font-weight: bold; background: #c53030; width: 100%; color: white; border: none; border-radius: 4px; cursor: pointer; <?php echo $is_locked ? 'opacity: 0.6;' : ''; ?>"
         <?php echo $is_locked ? 'disabled' : ''; ?>
       >
         <?php
@@ -260,5 +276,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !$is_locked) {
     }, 1000);
   </script>
   <?php endif; ?>
+
+  <script>
+    const pinInput = document.getElementById('password');
+    const toggleBtn = document.getElementById('toggle-pass');
+
+    function showPin() {
+        pinInput.type = 'text';
+    }
+
+    function hidePin() {
+        pinInput.type = 'password';
+    }
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            showPin();
+        });
+        ['pointerup', 'pointerleave', 'pointercancel'].forEach((evt) => {
+            toggleBtn.addEventListener(evt, hidePin);
+        });
+        toggleBtn.addEventListener('keydown', (e) => {
+            if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault();
+                showPin();
+            }
+        });
+        toggleBtn.addEventListener('keyup', hidePin);
+        toggleBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+    }
+  </script>
 </body>
 </html>
