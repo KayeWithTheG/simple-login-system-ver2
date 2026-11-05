@@ -5,7 +5,7 @@ $success = "";
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    
+
     $student_id = trim($_POST["student_id"] ?? "");
     $name       = trim($_POST["name"] ?? "");
     $department = trim($_POST["department"] ?? "");
@@ -15,7 +15,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (!preg_match('/^\d{2}-\d{6}$/', $student_id)) {
         $error = "Student ID must follow format XX-XXXXXX with numbers only (e.g., 25-266124).";
     }
-    // 2. Name: letters, spaces, period, hyphen lang (NO numbers)
+    // 2. Name: letters, spaces, period, hyphen only (NO numbers)
     else if (!preg_match("/^[A-Za-z\s.\-]+$/", $name)) {
         $error = "Full Name must contain letters and spaces only (no numbers allowed).";
     }
@@ -49,6 +49,32 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   <meta charset="UTF-8">
   <title>Register - Student Access Pass</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .pw-wrap {
+      position: relative;
+      width: 100%;
+      margin-bottom: 5px;
+    }
+    .pw-wrap input {
+      padding-right: 46px !important;
+    }
+    .toggle-pass {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      padding: 4px;
+      cursor: pointer;
+      color: #666;
+      display: flex;
+      align-items: center;
+    }
+    .toggle-pass:hover {
+      color: #002147;
+    }
+  </style>
   <script>
     function checkPasswordStrength() {
       let pwd = document.getElementById("password").value;
@@ -83,13 +109,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         this.value = v;
       });
 
-      // Full Name: bawal ang numbers/symbols (typing, paste, autofill)
+      // Full Name: no numbers or symbols (typing, paste, autofill)
       const nameInput = document.getElementById("fullName");
       nameInput.addEventListener("input", function () {
         this.value = this.value.replace(/[^A-Za-z\s.\-]/g, "");
       });
       nameInput.addEventListener("keypress", function (e) {
         if (/[0-9]/.test(e.key)) e.preventDefault();
+      });
+
+      // Show / hide password toggle
+      document.querySelectorAll(".toggle-pass").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          const input = document.getElementById(btn.dataset.target);
+          const showing = input.type === "password";
+          input.type = showing ? "text" : "password";
+
+          btn.title = showing ? "Hide password" : "Show password";
+          btn.setAttribute("aria-label", btn.title);
+          btn.querySelector(".eye-open").style.display = showing ? "none" : "";
+          btn.querySelector(".eye-off").style.display = showing ? "" : "none";
+        });
       });
     });
   </script>
@@ -135,7 +175,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         type="text"
         id="fullName"
         name="name"
-        placeholder="Full Name "
+        placeholder="Full Name"
         pattern="[A-Za-z\s.\-]+"
         title="Letters, spaces, periods and hyphens only. No numbers."
         required
@@ -152,15 +192,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       >
 
       <!-- Password -->
-      <input
-        type="password"
-        id="password"
-        name="password"
-        placeholder="Password (Min. 8 characters)"
-        required
-        oninput="checkPasswordStrength()"
-        style="padding: 14px; font-size: 15px; margin-bottom: 5px; width: 100%; box-sizing: border-box;"
-      >
+      <div class="pw-wrap">
+        <input
+          type="password"
+          id="password"
+          name="password"
+          placeholder="Password (Min. 8 characters)"
+          required
+          oninput="checkPasswordStrength()"
+          style="padding: 14px; font-size: 15px; margin-bottom: 0; width: 100%; box-sizing: border-box;"
+        >
+        <button type="button" class="toggle-pass" data-target="password" title="Show password" aria-label="Show password">
+          <svg class="eye-open" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          <svg class="eye-off" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+          </svg>
+        </button>
+      </div>
 
       <div id="strength-text" style="font-size: 12px; font-weight: bold; text-align: left; margin-bottom: 15px;"></div>
 
